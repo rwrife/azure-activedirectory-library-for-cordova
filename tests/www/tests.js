@@ -61,9 +61,33 @@ module.exports.defineAutoTests = function () {
             }
         });
 
+        it("Should correctly parse jwt token", function () {
+            try {
+                var user = UserInfo.fromJWT("eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJhdWQiOiI2NjllZWI2Ny05NTY4LTQ5M2UtODhkYy1hYzI4MWUyNDY5MTAiLCJpc3MiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC81MTRiZGFhNC1iODhhLTQzODctOTViOS0zNzI0ZDg4ZjM2MmMvIiwiaWF0IjoxNDcyNjM2ODY3LCJuYmYiOjE0NzI2MzY4NjcsImV4cCI6MTQ3MjY0MDc2NywiYW1yIjpbInB3ZCJdLCJmYW1pbHlfbmFtZSI6Imxhc3ROYW1lLcOhxaFraGFsaWTDocWhIiwiZ2l2ZW5fbmFtZSI6Im5hbWUtw6HFoWtoYWxpZMOhxaEiLCJpcGFkZHIiOiIxMDkuNjAuMTM1LjEwOSIsIm5hbWUiOiJkaXNwbGF5TmFtZS3DocWha2hhbGlkw6HFoSIsIm9pZCI6IjExNzY1NWY4LTBmODItNGQ0ZC1hZTUwLWY3OWQ4MmYxMzJiMCIsInN1YiI6IkZPT2EzdDd1VFdSZVpDdzFfNUdEVVF3TnU2N3VFM2J3cVNIcnFUNzFlVFEiLCJ0aWQiOiI1MTRiZGFhNC1iODhhLTQzODctOTViOS0zNzI0ZDg4ZjM2MmMiLCJ1bmlxdWVfbmFtZSI6InVzZXJAY29yZG92YUFEQUwub25taWNyb3NvZnQuY29tIiwidXBuIjoidXNlckBjb3Jkb3ZhQURBTC5vbm1pY3Jvc29mdC5jb20iLCJ2ZXIiOiIxLjAifQ.");
+
+                expect(user).toBeDefined();
+                expect(user instanceof UserInfo).toBeTruthy();
+                // ensure utf8 characters are correctly handled
+                expect(user.displayableId).toEqual("displayName-áškhalidáš");
+                expect(user.familyName).toEqual("lastName-áškhalidáš");
+                expect(user.givenName).toEqual("name-áškhalidáš");
+                expect(user.uniqueId).toEqual("user@cordovaADAL.onmicrosoft.com");
+                expect(user.userId).toEqual("117655f8-0f82-4d4d-ae50-f79d82f132b0");
+                expect(user.identityProvider).toEqual("https://sts.windows.net/514bdaa4-b88a-4387-95b9-3724d88f362c/");
+                expect(user.passwordExpiresOn).toEqual(new Date(1472640767 * 1000));
+
+            } catch (err) {
+                expect(err).not.toBeDefined();
+            }
+        });
+
         // We need to test this case here because we need to be sure
         // that context for this authority hadn't been created already
         it("Should get token successfully if created using constructor", function (done) {
+            // skip tests that require user interaction if running on CI
+            if (window.IS_CI) {
+                pending();
+            }
             var context = new AuthenticationContext(AUTHORITY_URL);
             context.acquireTokenSilentAsync(RESOURCE_URL, APP_ID, TEST_USER_ID)
             .then(function (authResult) {
@@ -113,6 +137,9 @@ module.exports.defineAutoTests = function () {
                 done();
             }, function (err) {
                 expect(err).toBeDefined();
+                expect(err instanceof Error).toBeTruthy();
+                expect(err.message).toBeDefined();
+                expect(err.code).toBeDefined();
                 done();
             });
         });
@@ -141,6 +168,10 @@ module.exports.defineAutoTests = function () {
 
             // This test is pended since acquireTokenAsync will always bypass cookies and show UI
             xit("Should acquire token via 'acquireTokenAsync' method", function (done) {
+                // skip tests that require user interaction if running on CI
+                if (window.IS_CI) {
+                    pending();
+                }
                 authContext.acquireTokenAsync(RESOURCE_URL, APP_ID, REDIRECT_URL)
                 .then(function (authResult) {
                     expect(authResult).toBeDefined();
@@ -166,6 +197,10 @@ module.exports.defineAutoTests = function () {
             });
 
             it("Should acquire token via 'acquireTokenSilentAsync' method", function (done) {
+                // skip tests that require user interaction if running on CI
+                if (window.IS_CI) {
+                    pending();
+                }
                 authContext.acquireTokenSilentAsync(RESOURCE_URL, APP_ID, TEST_USER_ID)
                 .then(function (authResult) {
                     expect(authResult).toBeDefined();
@@ -183,6 +218,10 @@ module.exports.defineAutoTests = function () {
             });
 
             it("Should fail to acquire token via 'acquireTokenSilentAsync' method if username is not valid", function (done) {
+                // skip tests that require user interaction if running on CI
+                if (window.IS_CI) {
+                    pending();
+                }
                 authContext.acquireTokenSilentAsync(RESOURCE_URL, APP_ID, INVALID_USER_ID)
                 .then(function (authResult) {
                     expect(authResult).not.toBeDefined();
@@ -221,6 +260,10 @@ module.exports.defineAutoTests = function () {
         });
 
         it("Should acquire native cache via 'readItems' method", function (done) {
+            // skip tests that require user interaction if running on CI
+            if (window.IS_CI) {
+                pending();
+            }
             cache.readItems()
             .then(function (cacheItems) {
                 expect(cacheItems.constructor).toBe(Array);
@@ -234,6 +277,10 @@ module.exports.defineAutoTests = function () {
         });
 
         it("Should be able to delete item via 'deleteItem' method", function(done) {
+            // skip tests that require user interaction if running on CI
+            if (window.IS_CI) {
+                pending();
+            }
 
             var fail = function (err) {
                 expect(err).not.toBeDefined();
@@ -339,6 +386,39 @@ module.exports.defineManualTests = function (contentEl, createActionButton) {
         });
     });
 
+    createActionButton("Acquire token with userId (specified as DisplayableId aka email)", function () {
+
+        if (!context) {
+            contentEl.innerHTML = "Create context first";
+            return;
+        }
+
+        context.tokenCache.readItems()
+        .then(function function_name(items) {
+            var itemsWithDisplayableId = items.filter(function (item) {
+                return item && item.displayableId;
+            });
+
+            if (itemsWithDisplayableId.length <= 0) {
+                contentEl.innerHTML = "No users withDisplayableId found in cache, please acquire token first";
+                return;
+            }
+
+            context.acquireTokenAsync(RESOURCE_URL, APP_ID, REDIRECT_URL, itemsWithDisplayableId[0].displayableId).then(function (authRes) {
+                TEST_USER_ID = itemsWithDisplayableId[0].displayableId;
+                contentEl.innerHTML = authRes;
+                contentEl.innerHTML += "<br /> AccessToken: " + authRes.accessToken;
+                contentEl.innerHTML += "<br /> ExpiresOn: " + authRes.expiresOn;
+            }, function (err) {
+                contentEl.innerHTML = err ? err.message : "";
+            });
+
+            contentEl.innerHTML = JSON.stringify(items, null, 4);
+        }, function (err) {
+            contentEl.innerHTML = err ? err.message : "";
+        });
+    });
+
     createActionButton("Acquire token silently", function () {
 
         if (!context) {
@@ -352,6 +432,62 @@ module.exports.defineManualTests = function (contentEl, createActionButton) {
             contentEl.innerHTML += "<br /> ExpiresOn: " + authRes.expiresOn;
         }, function(err) {
             contentEl.innerHTML = err ? err.message : "";
+        });
+    });
+
+    createActionButton("Acquire token silently with userId", function () {
+
+        if (!context) {
+            contentEl.innerHTML = "Create context first";
+            return;
+        }
+
+        context.tokenCache.readItems()
+        .then(function function_name(items) {
+            var itemsWithUserId = items.filter(function (item) {
+                return item.userInfo && item.userInfo.userId;
+            });
+
+            if (itemsWithUserId.length <= 0) {
+                contentEl.innerHTML = "No users withUserId found in cache, please acquire token first";
+                return;
+            }
+
+            context.acquireTokenSilentAsync(RESOURCE_URL, APP_ID, itemsWithUserId[0].userInfo.userId).then(function (authRes) {
+                contentEl.innerHTML = authRes;
+                contentEl.innerHTML += "<br /> AccessToken: " + authRes.accessToken;
+                contentEl.innerHTML += "<br /> ExpiresOn: " + authRes.expiresOn;
+            }, function (err) {
+                contentEl.innerHTML = err ? err.message : "";
+            });
+        });
+    });
+
+    createActionButton("Acquire token silently with userId (specified as DisplayableId aka email)", function () {
+
+        if (!context) {
+            contentEl.innerHTML = "Create context first";
+            return;
+        }
+
+        context.tokenCache.readItems()
+        .then(function function_name(items) {
+            var itemsWithDisplayableId = items.filter(function (item) {
+                return item && item.displayableId;
+            });
+
+            if (itemsWithDisplayableId.length <= 0) {
+                contentEl.innerHTML = "No users withDisplayableId found in cache, please acquire token first";
+                return;
+            }
+
+            context.acquireTokenSilentAsync(RESOURCE_URL, APP_ID, itemsWithDisplayableId[0].displayableId).then(function (authRes) {
+                contentEl.innerHTML = authRes;
+                contentEl.innerHTML += "<br /> AccessToken: " + authRes.accessToken;
+                contentEl.innerHTML += "<br /> ExpiresOn: " + authRes.expiresOn;
+            }, function (err) {
+                contentEl.innerHTML = err ? err.message : "";
+            });
         });
     });
 

@@ -1,6 +1,6 @@
 # Active Directory Authentication Library (ADAL) plugin for Apache Cordova apps
 
-[![Build status](https://ci.appveyor.com/api/projects/status/ysf7dm2u2aclh7da/branch/master?svg=true)](https://ci.appveyor.com/project/sgrebnov/azure-activedirectory-library-for-cordova/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/hslf0dq6i33p320v/branch/master?svg=true)](https://ci.appveyor.com/project/adal-for-cordova-bot/azure-activedirectory-library-for-cordova/branch/master)
 [![Build Status](https://travis-ci.org/AzureAD/azure-activedirectory-library-for-cordova.svg?branch=master)](https://travis-ci.org/AzureAD/azure-activedirectory-library-for-cordova)
 
 Active Directory Authentication Library ([ADAL](https://msdn.microsoft.com/en-us/library/azure/jj573266.aspx)) plugin provides easy to use authentication functionality for your Apache Cordova apps by taking advantage of Windows Server Active Directory and Windows Azure Active Directory.
@@ -10,9 +10,25 @@ Here you can find the source code for the library.
   * [ADAL for iOS](https://github.com/AzureAD/azure-activedirectory-library-for-objc),
   * [ADAL for .NET](https://github.com/AzureAD/azure-activedirectory-library-for-dotnet).
 
+## NOTICE: iOS 10 and Azure Authentication
+
+**If you're using plugin version < 0.8.x on iOS platform, we strongly recommend you to update your application to use newest version of the plugin in order to support authentication on iOS 10, otherwise your users will not be able to sign-in once iOS 10 is released.**
+
+Once you’ve updated plugin to the latest version your application will continue to work, there is no further code changes required for your application to continue working.
+
+### To update your application using Cordova CLI
+
+- navigate to your app's directory
+- run the following commands:
+
+  ```
+cordova plugin rm cordova-plugin-ms-adal --save
+cordova plugin add cordova-plugin-ms-adal@0.8.x --save
+  ```
+
 ## Community Help and Support
 
-We leverage [Stack Overflow](http://stackoverflow.com/) to work with the community on supporting Azure Active Directory and its SDKs, including this one! We highly recommend you ask your questions on Stack Overflow (we're all on there!) Also browser existing issues to see if someone has had your question before. 
+We leverage [Stack Overflow](http://stackoverflow.com/) to work with the community on supporting Azure Active Directory and its SDKs, including this one! We highly recommend you ask your questions on Stack Overflow (we're all on there!) Also browser existing issues to see if someone has had your question before.
 
 We recommend you use the "adal" tag so we can see it! Here is the latest Q&A on Stack Overflow for ADAL: [http://stackoverflow.com/questions/tagged/adal](http://stackoverflow.com/questions/tagged/adal)
 
@@ -24,11 +40,13 @@ If you find a security issue with our libraries or services please report it to 
 
 This plugin uses native SDKs for ADAL for each supported platform and provides single API across all platforms. Here is a quick usage sample:
 
-```javascriptMicrosoft.ADAL.AuthenticationSettings.setUseBroker(false)
+```javascript
+
+Microsoft.ADAL.AuthenticationSettings.setUseBroker(false)
 
 // Shows user authentication dialog if required
 function authenticate(authCompletedCallback, errorCallback) {
-  var authContext = new Microsoft.ADAL.AuthenticationContext(authority);  
+  var authContext = new Microsoft.ADAL.AuthenticationContext(authority);
   authContext.tokenCache.readItems().then(function (items) {
     if (items.length > 0) {
         authority = items[0].authority;
@@ -70,7 +88,7 @@ Use `AuthenticationContext` constructor to synchronously create a new `Authentic
 - __validateAuthority__: Validate authority before sending token request. _(Boolean)_ (Default: `true`) [Optional]
 
 #### Example
-    var authContext = new Microsoft.ADAL.AuthenticationContext("https://login.windows.net/common"); 
+    var authContext = new Microsoft.ADAL.AuthenticationContext("https://login.windows.net/common");
 
 ## AuthenticationContext methods and properties
 - acquireTokenAsync
@@ -136,6 +154,21 @@ authContext.tokenCache.readItems().then(function (items) {
   console.log("Num cached items: " + items.length);
 });
 ```
+
+## Handling Errors
+
+In case of method execution failure corresponding promise is rejected with a standard `JavaScript Error` instance.
+The following error properties are available for you in this case:
+
+* err.message - Human-readable description of the error.
+* err.code - Error-code returned by native SDK; you can use this information to detect most common error reasons and provide extra
+logic based on this information. **Important:** code is platform specific, see below for more details:
+ * iOS: https://github.com/AzureAD/azure-activedirectory-library-for-objc/blob/dev/ADAL/src/public/ADErrorCodes.h
+ * Android: https://github.com/AzureAD/azure-activedirectory-library-for-android/blob/master/src/src/com/microsoft/aad/adal/ADALError.java
+ * Windows: https://github.com/AzureAD/azure-activedirectory-library-for-dotnet/blob/master/src/ADAL.PCL/Constants.cs
+* err.details - Raw error information returned by Apache Cordova bridge and native implementation (if available).
+
+
 
 ## Known issues and workarounds
 
@@ -218,8 +251,7 @@ To run the tests you need to create a new application as described in [Installat
   * Build and run application.
 
 ## Windows Quirks ##
-[There is currently a Cordova issue](https://issues.apache.org/jira/browse/CB-8615), which entails the need of the hook-based workaround.
-The workaround is to be discarded after a fix is applied.
+Plugin is based on native ADAL v2 as ADAL v3 [does not support Winmd anymore](https://stackoverflow.com/questions/37467211/adal-3-windown-8-1-app-nuget-update-failing#comment62469160_37468708).
 
 ### Using ADFS/SSO
 To use ADFS/SSO on Windows platform (Windows Phone 8.1 is not supported for now) add the following preference into `config.xml`:
@@ -239,6 +271,16 @@ The following method should be used to enable broker component support (delivere
 
 __Note__: Developer needs to register special redirectUri for broker usage. RedirectUri is in the format of `msauth://packagename/Base64UrlencodedSignature`
 
+## iOS Quirks ##
+### Broker support
+Plugin automatically detects whether to enable brokered authentication based on redirectUri format (if starts with `x-msauth-`).
+Developer needs to register special redirectUri for broker usage following format below:
+```
+x-msauth-<your-bundle-id>://<your.bundle.id>
+ex: x-msauth-com-microsoft-mytestiosapp://com.microsoft.mytestiosapp
+```
+Read [ADAL for iOS](https://github.com/AzureAD/azure-activedirectory-library-for-objc#brokered-authentication) to understand broker concept in more details.
+
 ## Copyrights ##
 Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 
@@ -247,3 +289,7 @@ Licensed under the Apache License, Version 2.0 (the "License"); you may not use 
 http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
+
+## We Value and Adhere to the Microsoft Open Source Code of Conduct
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.

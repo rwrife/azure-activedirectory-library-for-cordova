@@ -3,7 +3,7 @@
  Copyright (c) Microsoft Open Technologies, Inc.  All Rights Reserved.
  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 -->
-<plugin id="cordova-plugin-ms-adal" version="0.7.2-dev" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
+<plugin id="cordova-plugin-ms-adal" version="0.8.1" xmlns="http://apache.org/cordova/ns/plugins/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>ADAL for Cordova</name>
     <description>Provides Microsoft Azure Active Directory (ADAL) OAuth client.</description>
 
@@ -56,10 +56,12 @@
         </js-module>
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <activity android:name="com.microsoft.aad.adal.AuthenticationActivity" ></activity>
+            <activity android:name="com.microsoft.aad.adal.AuthenticationActivity"
+                android:configChanges="orientation|keyboardHidden|screenSize">
+            </activity>
         </config-file>
 
-        <framework src="com.microsoft.aad:adal:1.1.18" />
+        <framework src="com.microsoft.aad:adal:1.10.0" />
 
         <source-file src="src/android/CordovaAdalPlugin.java" target-dir="src/com/microsoft/aad/adal" />
         <source-file src="src/android/DefaultAuthenticationCallback.java" target-dir="src/com/microsoft/aad/adal" />
@@ -80,13 +82,48 @@
         <header-file src="src/ios/CordovaAdalUtils.h" />
         <source-file src="src/ios/CordovaAdalUtils.m" />
 
-        <framework src="src/ios/ADALiOS.framework" custom="true"/>
-        <resource-file src="src/ios/ADAL_iPhone_Storyboard.storyboard" />
-        <resource-file src="src/ios/ADAL_iPad_Storyboard.storyboard" />
+        <framework src="src/ios/ADAL.framework" custom="true"/>
 
         <resource-file src="src/ios/ADALiOS.entitlements" />
         <hook type="after_plugin_install" src="scripts/configureEntitlementsIos.js" />
         <hook type="before_plugin_uninstall" src="scripts/configureEntitlementsIos.js" />
+
+        <!-- (CB-11854) CODE_SIGN_ENTITLEMENTS for ios@4.3.0 and up -->
+        <config-file target="*-Debug.plist" parent="keychain-access-groups">
+            <array>
+                <string>$(AppIdentifierPrefix)com.microsoft.adalcache</string>
+            </array>
+        </config-file>
+        <config-file target="*-Release.plist" parent="keychain-access-groups">
+            <array>
+                <string>$(AppIdentifierPrefix)com.microsoft.adalcache</string>
+            </array>
+        </config-file>
+
+        <!--
+        Plist sections below are required for brokered authentication support
+        https://github.com/AzureAD/azure-activedirectory-library-for-objc#brokered-authentication
+        -->
+        <config-file target="*-Info.plist" parent="LSApplicationQueriesSchemes">
+            <array>
+                <string>msauth</string>
+            </array>
+        </config-file>
+
+        <config-file target="*-Info.plist" parent="CFBundleURLTypes">
+            <array>
+                <dict>
+                    <key>CFBundleTypeRole</key>
+                    <string>Editor</string>
+                    <key>CFBundleURLName</key>
+                    <string>$(CFBundleIdentifier)</string>
+                    <key>CFBundleURLSchemes</key>
+                    <array>
+                        <string>x-msauth-$(CFBundleIdentifier:rfc1034identifier)</string>
+                    </array>
+                </dict>
+            </array>
+        </config-file>
     </platform>
 
     <platform name="windows">
