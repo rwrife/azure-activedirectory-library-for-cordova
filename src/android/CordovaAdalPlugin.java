@@ -95,17 +95,23 @@ public class CordovaAdalPlugin extends CordovaPlugin {
 
         } else if (action.equals("acquireTokenSilentAsync")) {
 
-            String authority = args.getString(0);
-            boolean validateAuthority = args.optBoolean(1, true);
-            String resourceUrl = args.getString(2);
-            String clientId = args.getString(3);
-            String userId = args.getString(4);
+            final String authority = args.getString(0);
+            final boolean validateAuthority = args.optBoolean(1, true);
+            final String resourceUrl = args.getString(2);
+            final String clientId = args.getString(3);
 
             // This is a workaround for Cordova bridge issue. When null us passed from JS side
             // it is being translated to "null" string
-            userId = userId.equals("null") ? null : userId;
+            final String userId = args.getString(4).equals("null") ? null : args.getString(4);
 
-            return acquireTokenSilentAsync(authority, validateAuthority, resourceUrl, clientId, userId);
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    acquireTokenSilentAsync(authority, validateAuthority, resourceUrl, clientId, userId);
+                }
+            });
+
+            return true;
 
         } else if (action.equals("tokenCacheClear")){
 
@@ -215,7 +221,7 @@ public class CordovaAdalPlugin extends CordovaPlugin {
             return true;
         }
 
-        authContext.acquireTokenSilent(resourceUrl, clientId, userId, new DefaultAuthenticationCallback(callbackContext));
+        authContext.acquireTokenSilentAsync(resourceUrl, clientId, userId, new DefaultAuthenticationCallback(callbackContext));
         return true;
     }
 
