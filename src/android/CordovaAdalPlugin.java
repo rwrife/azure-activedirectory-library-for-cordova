@@ -289,16 +289,6 @@ public class CordovaAdalPlugin extends CordovaPlugin {
         try {
             AuthenticationSettings.INSTANCE.setUseBroker(useBroker);
 
-            // Android 6.0 "Marshmallow" introduced a new permissions model where the user can turn on and off permissions as necessary.
-            // This means that applications must handle these permission in run time.
-            // http://cordova.apache.org/docs/en/latest/guide/platforms/android/plugin.html#android-permissions
-            if (useBroker && Build.VERSION.SDK_INT >= 23 /* Build.VERSION_CODES.M */ ) {
-
-                requestBrokerPermissions();
-                // Cordova callback will be handled by requestBrokerPermissions method
-                return true;
-            }
-
         } catch (Exception e) {
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, e.getMessage()));
             return true;
@@ -348,18 +338,6 @@ public class CordovaAdalPlugin extends CordovaPlugin {
         });
 
         return true;
-    }
-
-    private void requestBrokerPermissions() {
-
-        // USE_CREDENTIALS and MANAGE_ACOUNTS are deprecated and not required
-        if(PermissionHelper.hasPermission(this, Manifest.permission.GET_ACCOUNTS)) { // android.permission.GET_ACCOUNTS
-            // already granted
-            callbackContext.success();
-            return;
-        }
-
-        PermissionHelper.requestPermission(this, GET_ACCOUNTS_PERMISSION_REQ_CODE, Manifest.permission.GET_ACCOUNTS);
     }
 
     @Override
