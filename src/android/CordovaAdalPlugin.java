@@ -79,18 +79,29 @@ public class CordovaAdalPlugin extends CordovaPlugin {
 
         } else if (action.equals("acquireTokenAsync")) {
 
-            String authority = args.getString(0);
-            boolean validateAuthority = args.optBoolean(1, true);
-            String resourceUrl = args.getString(2);
-            String clientId = args.getString(3);
-            String redirectUrl = args.getString(4);
-            String userId = args.optString(5, null);
-            userId = userId.equals("null") ? null : userId;
-            String extraQueryParams = args.optString(6, null);
-            extraQueryParams = extraQueryParams.equals("null") ? null : extraQueryParams;
+            final String authority = args.getString(0);
+            final boolean validateAuthority = args.optBoolean(1, true);
+            final String resourceUrl = args.getString(2);
+            final String clientId = args.getString(3);
+            final String redirectUrl = args.getString(4);
+            final String userId = args.optString(5, null).equals("null") ? null : args.optString(5, null);
+            final String extraQueryParams = args.optString(6, null).equals("null") ? null : args.optString(6, null);
 
-            return acquireTokenAsync(authority, validateAuthority, resourceUrl, clientId, redirectUrl, userId, extraQueryParams);
+            cordova.getThreadPool().execute(new Runnable() {
+                @Override
+                public void run() {
+                    acquireTokenAsync(
+                            authority,
+                            validateAuthority,
+                            resourceUrl,
+                            clientId,
+                            redirectUrl,
+                            userId,
+                            extraQueryParams);
+                }
+            });
 
+            return true;
         } else if (action.equals("acquireTokenSilentAsync")) {
 
             final String authority = args.getString(0);
@@ -105,7 +116,10 @@ public class CordovaAdalPlugin extends CordovaPlugin {
             cordova.getThreadPool().execute(new Runnable() {
                 @Override
                 public void run() {
-                    acquireTokenSilentAsync(authority, validateAuthority, resourceUrl, clientId, userId);
+                    acquireTokenSilentAsync(
+                            authority,
+                            validateAuthority,
+                            resourceUrl, clientId, userId);
                 }
             });
 
@@ -157,14 +171,14 @@ public class CordovaAdalPlugin extends CordovaPlugin {
         return true;
     }
 
-    private boolean acquireTokenAsync(String authority, boolean validateAuthority, String resourceUrl, String clientId, String redirectUrl, String userId, String extraQueryParams) {
+    private void acquireTokenAsync(String authority, boolean validateAuthority, String resourceUrl, String clientId, String redirectUrl, String userId, String extraQueryParams) {
 
         final AuthenticationContext authContext;
         try{
             authContext = getOrCreateContext(authority, validateAuthority);
         } catch (Exception e) {
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, e.getMessage()));
-            return true;
+            return;
         }
 
         if (userId != null) {
@@ -179,14 +193,18 @@ public class CordovaAdalPlugin extends CordovaPlugin {
             }
         }
 
-        authContext.acquireToken(this.cordova.getActivity(), resourceUrl, clientId, redirectUrl,
-                userId, SHOW_PROMPT_ALWAYS, extraQueryParams, new DefaultAuthenticationCallback(callbackContext));
-
-        return true;
-
+        authContext.acquireToken(
+                this.cordova.getActivity(),
+                resourceUrl,
+                clientId,
+                redirectUrl,
+                userId,
+                SHOW_PROMPT_ALWAYS,
+                extraQueryParams,
+                new DefaultAuthenticationCallback(callbackContext));
     }
 
-    private boolean acquireTokenSilentAsync(String authority, boolean validateAuthority, String resourceUrl, String clientId, String userId) {
+    private void acquireTokenSilentAsync(String authority, boolean validateAuthority, String resourceUrl, String clientId, String userId) {
 
         final AuthenticationContext authContext;
         try{
@@ -210,11 +228,10 @@ public class CordovaAdalPlugin extends CordovaPlugin {
 
         } catch (Exception e) {
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, e.getMessage()));
-            return true;
+            return;
         }
 
         authContext.acquireTokenSilentAsync(resourceUrl, clientId, userId, new DefaultAuthenticationCallback(callbackContext));
-        return true;
     }
 
     private boolean readTokenCacheItems(String authority, boolean validateAuthority) throws JSONException {
