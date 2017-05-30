@@ -315,7 +315,6 @@ public class CordovaAdalPlugin extends CordovaPlugin {
         return true;
     }
 
-
     private boolean setLogLevel(Integer logLevel) {
         try {
             Logger.LogLevel level = Logger.LogLevel.values()[logLevel];
