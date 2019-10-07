@@ -5,7 +5,7 @@
 module.exports = function (ctx) {
     var shell = ctx.requireCordovaModule('shelljs');
     var path = ctx.requireCordovaModule('path');
-    var fs = ctx.requireCordovaModule('fs');
+    var fs = require('fs');
     var helperPluginId = 'cordova-plugin-ms-adal-sso';
 
     // Removing references from .projitems
@@ -20,7 +20,7 @@ module.exports = function (ctx) {
     // Removing helper plugin as we added it manually
     var ssoPluginInstallPath = path.join(ctx.opts.projectRoot, 'plugins', helperPluginId);
     var ssoPluginDepEnabled = fs.existsSync(ssoPluginInstallPath);
-    
+
     if (ssoPluginDepEnabled) {
         console.log('Removing SSO helper plugin');
 
@@ -32,7 +32,7 @@ module.exports = function (ctx) {
 
         var plugman = ctx.requireCordovaModule('../plugman/plugman');
 
-        plugman.uninstall(plugmanInstallOpts.platform, plugmanInstallOpts.project, 
+        plugman.uninstall(plugmanInstallOpts.platform, plugmanInstallOpts.project,
             helperPluginId, plugmanInstallOpts.plugins_dir);
     }
 };

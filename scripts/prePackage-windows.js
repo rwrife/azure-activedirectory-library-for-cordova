@@ -5,7 +5,7 @@
 module.exports = function (ctx) {
     var shell = ctx.requireCordovaModule('shelljs');
     var path = ctx.requireCordovaModule('path');
-    var fs = ctx.requireCordovaModule('fs');
+    var fs = require('fs');
     var helperPluginId = 'cordova-plugin-ms-adal-sso';
 
     // Read config.xml -> extract adal-use-corporate-network variable value; default it to false
@@ -45,7 +45,7 @@ module.exports = function (ctx) {
             // Enabling dependency
             var plugman = ctx.requireCordovaModule('../plugman/plugman');
 
-            plugman.install(plugmanInstallOpts.platform, plugmanInstallOpts.project, 
+            plugman.install(plugmanInstallOpts.platform, plugmanInstallOpts.project,
                 ssoPluginPath, plugmanInstallOpts.plugins_dir);
         }
     } else {
@@ -59,7 +59,7 @@ module.exports = function (ctx) {
             // Removing dependency
             var plugman = ctx.requireCordovaModule('../plugman/plugman');
 
-            plugman.uninstall(plugmanInstallOpts.platform, plugmanInstallOpts.project, 
+            plugman.uninstall(plugmanInstallOpts.platform, plugmanInstallOpts.project,
                 helperPluginId, plugmanInstallOpts.plugins_dir);
         }
     }

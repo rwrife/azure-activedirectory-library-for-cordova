@@ -22,7 +22,7 @@ module.exports = function (ctx) {
         return;
     };
 
-    var fs = ctx.requireCordovaModule('fs');
+    var fs = require('fs');
     var path = ctx.requireCordovaModule('path');
     var xcode = ctx.requireCordovaModule('xcode');
 
