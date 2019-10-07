@@ -26,7 +26,7 @@ module.exports = function (ctx) {
     var path = require('path');
     var xcode = require('xcode');
 
-    var deferral = new ctx.requireCordovaModule('q').defer();
+    var deferral = new require('q').defer();
 
     var platformRoot = path.join(ctx.opts.projectRoot, 'platforms', 'ios');
 
